@@ -20,7 +20,7 @@ from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
 import time
-from models.casiaimage import detect_casia_fake  
+from models.casia import detect_casia_fake  
 from ffmpeg import run_video_forensics
 from exiftool import extract_metadata
 from report import generate_report
