@@ -1,7 +1,16 @@
 import os
 from dotenv import load_dotenv
+import subprocess
 from model_downloader import ensure_models_exist
+def install_requirements():
+    req_file = "requirements.txt"
+    if os.path.exists(req_file):
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_file])
+        except:
+            pass
 
+install_requirements()
 load_dotenv()
 ensure_models_exist()
 
@@ -11,7 +20,6 @@ from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
 import time
-from models.imagecnn import detect_image_fake
 from models.casiaimage import detect_casia_fake  
 from ffmpeg import run_video_forensics
 from exiftool import extract_metadata
