@@ -1,6 +1,12 @@
+import os
+from dotenv import load_dotenv
+from model_downloader import ensure_models_exist
+
+load_dotenv()
+ensure_models_exist()
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import os
 from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
@@ -13,16 +19,25 @@ from report import generate_report
 from models.midv500 import detect_document_fake
 from pydub import AudioSegment
 from models.audiospoof import detect_audio_spoof
-from backendstore import MONGO_URL, UPLOAD_FOLDER
+from backendstore import UPLOAD_FOLDER
 
 app = Flask(__name__)
 CORS(app)
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-client = MongoClient(MONGO_URL)
-db = client["digital_forensics"]
-collection = db["history"]
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/forensics_db")
+
+db = None
+collection = None
+
+try:
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
+    client.server_info()
+    db = client["digital_forensics"]
+    collection = db["history"]
+except:
+    pass
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -41,7 +56,6 @@ def upload():
         file.save(path)
         ext = file.filename.split(".")[-1].lower()
 
-        
         if ext == "pdf":
             print("📄 Running Document Forensics (MIDV-500 + ELA)...")
             metadata = extract_metadata(path)
@@ -86,7 +100,6 @@ def upload():
             except Exception as e:
                 return jsonify({"error": f"Audio conversion failed: {str(e)}"}), 400
 
-            
             metadata = extract_metadata(path)
             audio_result = detect_audio_spoof(wav_path)
             
@@ -106,16 +119,24 @@ def upload():
             "audio_forensics": audio_result,  
             "report": report
         }
-        inserted = collection.insert_one(data)
-        return jsonify({"id": str(inserted.inserted_id), "report": report})
+        
+        inserted_id = "not_saved_to_db"
+        if collection is not None:
+            inserted = collection.insert_one(data)
+            inserted_id = str(inserted.inserted_id)
+            
+        return jsonify({"id": inserted_id, "report": report})
 
     except Exception as e:
         print(f"❌ Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if os.path.exists(path): os.remove(path)
+
 @app.route("/report/<id>", methods=["GET"])
 def get_report(id):
+    if collection is None:
+        return jsonify({"error": "Database not connected"}), 503
     try:
         data = collection.find_one({"_id": ObjectId(id)})
         if data:
@@ -127,6 +148,8 @@ def get_report(id):
 
 @app.route("/history", methods=["GET"])
 def history():
+    if collection is None:
+        return jsonify([])
     data = list(collection.find())
     for d in data:
         d["_id"] = str(d["_id"])
