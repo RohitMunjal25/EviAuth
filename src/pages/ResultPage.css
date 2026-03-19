@@ -1,0 +1,55 @@
+.result-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.result-file     { display: flex; align-items: center; gap: 12px; }
+.result-filename { font-size: 15px; font-weight: 700; }
+.result-filemeta { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* Score card */
+.score-card { text-align: center; }
+.ring-wrap  { position: relative; width: 140px; height: 140px; margin: 0 auto 16px; }
+.ring-svg   { width: 100%; height: 100%; display: block; }
+.ring-center {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.ring-value { display: block; font-size: 26px; font-weight: 700; line-height: 1; }
+.ring-label { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+.verdict-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.verdict-desc  { font-size: 12px; color: '#94a3b8'; line-height: 1.6; color: #94a3b8; margin-bottom: 16px; }
+
+.risk-list { width: 100%; text-align: left; }
+.risk-item { margin-bottom: 10px; }
+.risk-row-meta { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.risk-track { background: #0f172a; border-radius: 50px; height: 4px; overflow: hidden; }
+.risk-fill  { height: 100%; border-radius: 50px; transition: width 1s ease; }
+
+/* Metadata */
+.meta-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1e293b; font-size: 13px; }
+.meta-row:last-child { border-bottom: none; }
+.meta-key { color: #94a3b8; }
+.meta-val { color: #38bdf8; font-size: 12px; }
+
+/* Findings */
+.finding { margin-bottom: 12px; padding: 16px; }
+.finding-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.finding-title { flex: 1; font-size: 14px; font-weight: 600; }
+.finding-note  { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+
+.result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+
+@media (max-width: 768px) { .result-grid { grid-template-columns: 1fr; } }
