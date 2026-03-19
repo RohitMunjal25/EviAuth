@@ -1,0 +1,93 @@
+.scan-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 24px;
+}
+
+.scan-box {
+  width: 100%;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+.scan-header { text-align: center; }
+.scan-icon {
+  font-size: 52px;
+  animation: pulse 1.5s ease-in-out infinite;
+  display: block;
+  margin-bottom: 12px;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
+.scan-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.scan-header p  { font-size: 13px; color: #64748b; }
+
+/* Progress bar */
+.scan-bar-card {}
+.bar-outer {
+  background: #0f172a;
+  border-radius: 50px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.bar-inner {
+  height: 100%;
+  border-radius: 50px;
+  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+  transition: width 0.4s ease;
+}
+.bar-meta { display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8; }
+.bar-pct  { color: #38bdf8; font-weight: 600; }
+
+/* Steps */
+.scan-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.scan-step.running { background: rgba(56,189,248,0.06); }
+
+.step-dot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+}
+.step-dot.waiting { background: #1e293b; color: #475569; border: 1px solid #334155; }
+.step-dot.running { background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid #38bdf8; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.step-dot.done { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+
+.step-info { flex: 1; }
+.step-name { display: block; font-size: 13px; font-weight: 600; }
+.step-desc { display: block; font-size: 11px; color: #64748b; }
+.step-mark { font-size: 14px; }
+
+/* Terminal log */
+.scan-log {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  max-height: 130px;
+  overflow-y: auto;
+  color: #94a3b8;
+}
+.log-line { color: #4ade80; }
+.log-cursor { color: #38bdf8; animation: blink 1s step-end infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
