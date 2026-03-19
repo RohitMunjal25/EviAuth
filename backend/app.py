@@ -1,7 +1,9 @@
 import os
+import sys
 from dotenv import load_dotenv
 import subprocess
 from model_downloader import ensure_models_exist
+
 def install_requirements():
     req_file = "requirements.txt"
     if os.path.exists(req_file):
@@ -20,11 +22,13 @@ from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
 import time
+
 from models.casiaimage import detect_casia_fake  
+from models.cifakeimage import detect_ai_generated 
+from models.midv500 import detect_document_fake
 from ffmpeg import run_video_forensics
 from exiftool import extract_metadata
 from report import generate_report
-from models.midv500 import detect_document_fake
 from pydub import AudioSegment
 from models.audiospoof import detect_audio_spoof
 from backendstore import UPLOAD_FOLDER
@@ -34,7 +38,7 @@ CORS(app)
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/forensics_db")
+MONGO_URI = os.getenv("MONGO_URL", "mongodb://localhost:27017/forensics_db")
 
 db = None
 collection = None
@@ -65,31 +69,44 @@ def upload():
         ext = file.filename.split(".")[-1].lower()
 
         if ext == "pdf":
-            print("📄 Running Document Forensics (MIDV-500 + ELA)...")
+            print(" Running Document Forensics (MIDV-500 + ELA)...")
             metadata = extract_metadata(path)
             doc_result = detect_document_fake(path)
             
             image_result = {
-                "cnn_score": doc_result["doc_score"],
-                "total_pages": doc_result["total_pages"],
+                "cnn_score": doc_result.get("doc_score", 0),
+                "total_pages": doc_result.get("total_pages", 1),
                 "is_pdf": True
             }
             report = generate_report(metadata, image_forensics=image_result, filename=file.filename)
 
         elif ext in ["jpg", "jpeg", "png", "tiff", "bmp"]:
-            print("🖼️ Running Image Forensics (MIDV-500 + ELA)...")
+            print("Running Hybrid Image Forensics (CASIA + GenAI)...")
             metadata = extract_metadata(path)
             
-            res = detect_document_fake(path) 
+            try:
+                casia_res = detect_casia_fake(path)
+                tampering_score = casia_res.get("fake_probability", casia_res.get("score", casia_res.get("doc_score", 0)))
+            except Exception as e:
+                print(f" CASIA Error: {e}")
+                tampering_score = 0
+
+            try:
+                genai_res = detect_ai_generated(path)
+                genai_score = genai_res.get("genai_score", 0)
+            except Exception as e:
+                print(f"cifake Error: {e}")
+                genai_score = 0
             
             image_result = {
-                "cnn_score": res["doc_score"],
-                "cnn_label": "Potential Manipulation" if res["doc_score"] > 50 else "Likely Real",
+                "cnn_score": tampering_score,
+                "genai_score": genai_score,
                 "is_pdf": False
             }
             report = generate_report(metadata, image_forensics=image_result, filename=file.filename)
 
         elif ext in ["mp4", "mov", "avi", "mkv"]:
+            print("🎥 Running Video Forensics...")
             video_result = run_video_forensics(path)
             metadata = video_result.get("metadata", {})
             report = generate_report(metadata, video_forensics=video_result, filename=file.filename)
@@ -104,7 +121,7 @@ def upload():
                 audio = AudioSegment.from_file(path)
                 audio = audio.set_frame_rate(16000).set_channels(1)
                 audio.export(wav_path, format="wav")
-                print(f"✅ Converted to WAV: {wav_filename}")
+                print(f"Converted to WAV: {wav_filename}")
             except Exception as e:
                 return jsonify({"error": f"Audio conversion failed: {str(e)}"}), 400
 
@@ -136,7 +153,7 @@ def upload():
         return jsonify({"id": inserted_id, "report": report})
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if os.path.exists(path): os.remove(path)
@@ -165,17 +182,13 @@ def history():
 
 @app.route("/health")
 def health():
-    return {
-        "status": "alive",
-        "message": "Backend is running 🚀"
-    }, 200
+    return {"status": "alive", "message": "Backend is running "}, 200
 
 def make_json_safe(data):
     if isinstance(data, dict):
         new_dict = {}
         for k, v in data.items():
-            new_key = str(k)
-            new_dict[new_key] = make_json_safe(v)
+            new_dict[str(k)] = make_json_safe(v)
         return new_dict
     elif isinstance(data, list):
         return [make_json_safe(v) for v in data]

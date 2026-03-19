@@ -14,7 +14,8 @@ MODELS_TO_DOWNLOAD = {
     "midv500.keras": f"{HF_BASE_URL}midv500.keras",
     "casia_model.h5": f"{HF_BASE_URL}casia_model.h5",
     "dfdc_model.h5": f"{HF_BASE_URL}dfdc_model.h5",
-    "faceforensics_model.h5": f"{HF_BASE_URL}faceforensics_model.h5"
+    "faceforensics_model.h5": f"{HF_BASE_URL}faceforensics_model.h5",
+    "cifake.keras": f"{HF_BASE_URL}cifake.keras"
 }
 
 MODELS_DIR = "models"
@@ -27,7 +28,7 @@ def download_file(url, filepath):
     total_size = int(response.headers.get('content-length', 0))
     block_size = 1024 * 1024 
 
-    print(f"⬇️ Downloading: {os.path.basename(filepath)}")
+    print(f" Downloading: {os.path.basename(filepath)}")
     with open(filepath, 'wb') as file, tqdm(
         total=total_size, unit='iB', unit_scale=True, desc=os.path.basename(filepath)
     ) as progress_bar:

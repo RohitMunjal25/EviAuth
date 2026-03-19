@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import fitz  
 import tensorflow as tf
 import numpy as np
 from PIL import Image, ImageChops, ImageEnhance
@@ -30,26 +30,22 @@ def detect_document_fake(file_path):
         img_data = pix.tobytes("png")
         original_img = Image.open(io.BytesIO(img_data)).convert('RGB')
 
-        # AI Prediction on Original
         img_resized = original_img.resize((224, 224))
         img_array = tf.keras.preprocessing.image.img_to_array(img_resized)
         img_array = np.expand_dims(img_array, axis=0)
         orig_score = float(model.predict(img_array, verbose=0)[0][0])
 
-        # AI Prediction on ELA
         ela_img = apply_ela(original_img)
         ela_resized = ela_img.resize((224, 224))
         ela_array = tf.keras.preprocessing.image.img_to_array(ela_resized)
         ela_array = np.expand_dims(ela_array, axis=0)
         ela_score = float(model.predict(ela_array, verbose=0)[0][0])
 
-        # Hybrid Score (Average)
         final_page_score = (orig_score + ela_score) / 2
         page_results.append(final_page_score)
 
     doc.close()
     
-    # Poore document ka average score nikaalo
     avg_doc_score = sum(page_results) / len(page_results)
     
     return {

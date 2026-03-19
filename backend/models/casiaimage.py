@@ -7,7 +7,7 @@ MODEL_PATH = "models/casia_model.h5"
 try:
     casia_model = load_model(MODEL_PATH)
 except Exception as e:
-    print(f"❌ Error loading CASIA model: {e}")
+    print(f"Error loading CASIA model: {e}")
     casia_model = None
 
 def detect_casia_fake(img_path):
@@ -40,5 +40,5 @@ def detect_casia_fake(img_path):
             "casia_label": "Manipulated" if fake_score > 65 else "Authentic"
         }
     except Exception as e:
-        print(f"❌ CASIA Processing Error: {e}")
+        print(f"CASIA Processing Error: {e}")
         return {"casia_score": 0.0, "casia_label": "Error"}

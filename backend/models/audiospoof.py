@@ -55,7 +55,6 @@ def detect_audio_spoof(wav_path):
         is_la_fake = la_score < LA_THRESHOLD
         is_pa_fake = pa_score >= PA_THRESHOLD
         
-        # 💡 Confidence Calculations
         real_confidence = la_score * 100
         fake_confidence = (1.0 - la_score) * 100
         
@@ -89,5 +88,5 @@ def detect_audio_spoof(wav_path):
         }
         
     except Exception as e:
-        print(f"❌ Audio Processing Error: {e}")
+        print(f"Audio Processing Error: {e}")
         return None

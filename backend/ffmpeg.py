@@ -52,7 +52,7 @@ def run_video_forensics(video_path):
         }
 
     except Exception as e:
-        print(f"❌ Forensic Error: {e}")
+        print(f"Forensic Error: {e}")
         return {
             "error": str(e),
             "metadata": metadata, 
@@ -60,6 +60,5 @@ def run_video_forensics(video_path):
         }
         
     finally:
-        # 4. Final Cleanup
         if os.path.exists(folder):
             shutil.rmtree(folder, ignore_errors=True)

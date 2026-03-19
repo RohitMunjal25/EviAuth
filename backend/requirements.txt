@@ -12,3 +12,6 @@ opencv-python
 pillow
 scipy
 h5py
+mtcnn
+huggingface-hub
+PyMuPDF

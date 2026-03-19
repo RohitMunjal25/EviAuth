@@ -8,7 +8,7 @@ MODEL_PATH = "models/faceforensics_model.h5"
 try:
     model = load_model(MODEL_PATH)
 except Exception as e:
-    print(f"❌ Error loading FaceForensics model: {e}")
+    print(f"Error loading FaceForensics model: {e}")
 
 detector = MTCNN() 
 
@@ -56,7 +56,7 @@ def detect_faceforensics(frames_folder):
                 scores.append(fake_prob)
             
         except Exception as e:
-            print(f"⚠️ Bypassing internal error for frame {f}: {e}")
+            print(f"Bypassing internal error for frame {f}: {e}")
             continue
 
     if not scores:
