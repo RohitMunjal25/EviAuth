@@ -1,4 +1,4 @@
 .env
 models/*.h5
 models/*.keras
-_pycache_
+models/*._pycache_
