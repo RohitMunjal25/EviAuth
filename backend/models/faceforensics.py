@@ -28,7 +28,7 @@ def detect_faceforensics(frames_folder):
         try:
             results = detector.detect_faces(img_rgb)
             
-            if not results:
+            if not results or len(results) == 0:
                 continue
 
             res = results[0]
@@ -44,7 +44,7 @@ def detect_faceforensics(frames_folder):
             
             face = img_rgb[start_y:end_y, start_x:end_x]
             
-            if face.size == 0 or face.shape[0] == 0 or face.shape[1] == 0:
+            if face.size == 0 or face.shape[0] < 10 or face.shape[1] < 10:
                 continue
 
             face_resized = cv2.resize(face, (target_w, target_h))
@@ -56,7 +56,6 @@ def detect_faceforensics(frames_folder):
                 scores.append(fake_prob)
             
         except Exception as e:
-            print(f"Bypassing internal error for frame {f}: {e}")
             continue
 
     if not scores:
@@ -65,5 +64,5 @@ def detect_faceforensics(frames_folder):
     avg_fake_prob = sum(scores) / len(scores)
     return {
         "ff_score": float(round(avg_fake_prob * 100, 2)),
-        "ff_label": "Deepfake" if avg_fake_prob > 0.65 else "Real" 
+        "ff_label": "Deepfake" if avg_fake_prob > 0.50 else "Real" 
     }

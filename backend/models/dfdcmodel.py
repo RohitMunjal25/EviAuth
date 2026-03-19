@@ -28,7 +28,7 @@ def detect_deepfake(frames_folder):
         
         if img_ready is not None:
             pred = model.predict(img_ready, verbose=0)[0][0]
-            fake_prob = 1.0 - float(pred)
+            fake_prob = 1.0 - float(pred) 
             scores.append(fake_prob)
 
     if not scores:
@@ -39,5 +39,5 @@ def detect_deepfake(frames_folder):
     
     return {
         "deepfake_score": final_score, 
-        "deepfake_label": "Deepfake" if final_score >= 55 else "Real"
+        "deepfake_label": "Deepfake" if final_score >= 50 else "Real"
     }
