@@ -12,7 +12,7 @@ MODELS_TO_DOWNLOAD = {
     "asvspoof_la_model.h5": f"{HF_BASE_URL}asvspoof_la_model.h5",
     "asvspoof_pa_model.h5": f"{HF_BASE_URL}asvspoof_pa_model.h5",
     "midv500.keras": f"{HF_BASE_URL}midv500.keras",
-    "casia_mode.h5": f"{HF_BASE_URL}casia_model.h5",
+    "casia_model.h5": f"{HF_BASE_URL}casia_model.h5",
     "dfdc_model.h5": f"{HF_BASE_URL}dfdc_model.h5",
     "faceforensics_model.h5": f"{HF_BASE_URL}faceforensics_model.h5"
 }
