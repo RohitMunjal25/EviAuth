@@ -27,7 +27,7 @@ export default function UploadPage({ goScan }) {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://13.61.105.7:10000/upload", {
+      const response = await fetch(" https://breach-volleyball-dance-civilization.trycloudflare.com/upload", {
         method: "POST",
         body: formData,
       });

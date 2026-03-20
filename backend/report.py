@@ -1,5 +1,4 @@
 def generate_report(metadata, video_forensics=None, image_forensics=None, audio_forensics=None, filename=""):
-    
     model = str(metadata.get('Model', metadata.get('DeviceModelName', ''))).strip()
     make = str(metadata.get('Make', metadata.get('Manufacturer', ''))).strip()
     has_hard_metadata = any([model, make]) and model.lower() != "unknown" and make.lower() != "unknown"
@@ -20,7 +19,7 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
             summary = f"Audio Forgery Detected: Identified as {details} ({round(fake_prob, 2)}%)."
         elif status_label == "Suspicious" or fake_prob > 50:
             status = "Suspicious"
-            summary = f"Highly Compressed/Noisy Audio. Hard to verify 100% authenticity. Manipulation probability: {round(fake_prob, 2)}%."
+            summary = f"Highly Compressed Audio. Manipulation probability: {round(fake_prob, 2)}%."
         else:
             status = "Authentic"
             summary = f"Verified Original Audio: Passed integrity check ({round(real_conf, 2)}% Authentic)."
@@ -28,21 +27,22 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
     elif video_forensics:
         dfdc_score = video_forensics.get('dfdc', {}).get('deepfake_score', 0)
         ff_score = video_forensics.get('faceforensics', {}).get('ff_score', 0)
-        fake_prob = (dfdc_score * 0.6) + (ff_score * 0.4)
+        
+        fake_prob = (dfdc_score * 0.7) + (ff_score * 0.3)
 
-        if not has_hard_metadata:
-            if fake_prob > 65:
-                status = "Manipulated"
-                summary = f"Video Forgery Detected: High AI manipulation score ({round(fake_prob, 2)}%) and missing camera metadata."
-            elif 45 <= fake_prob <= 65:
-                status = "Suspicious"
-                summary = f"Suspicious/Compressed Video: No device metadata. Score ({round(fake_prob, 2)}%) suggests heavy compression or mild edits."
-            else:
-                status = "Authentic"
-                summary = "Real Video: Metadata stripped (likely WhatsApp/Social Media), but pixel flow is consistent."
-        else:
-            status = "Authentic" if fake_prob < 65 else "Manipulated"
-            summary = f"Verified Original Video: Captured via {device_name}." if fake_prob < 65 else "Hardware found, but AI edits detected."
+        if fake_prob > 65: 
+            status = "Manipulated"
+            summary = f"Video Forgery Detected: High AI artifact patterns found ({round(fake_prob, 2)}%)."
+        elif 45 <= fake_prob <= 65: 
+            status = "Suspicious"
+            summary = "Potential Manipulation: High noise or compression artifacts detected."
+        else: 
+            status = "Authentic"
+            summary = "Verified Original: Video pixels and neural flow are consistent."
+
+        if has_hard_metadata and fake_prob < 55:
+            status = "Authentic"
+            summary = f"Verified Original: Securely captured via {device_name}."
 
     elif image_forensics:
         tampering_score = image_forensics.get("cnn_score", 0) 
@@ -50,19 +50,17 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
         is_pdf = image_forensics.get("is_pdf", False)
         
         if is_pdf:
-            media_type = "Document"
             fake_prob = tampering_score
             if fake_prob > 75:
                 status = "Manipulated"
-                summary = f"Document Forgery Detected: Heavy digital overlays found via ELA ({round(fake_prob, 2)}%)."
+                summary = f"Document Forgery Detected: Heavy digital overlays found ({round(fake_prob, 2)}%)."
             elif 50 < fake_prob <= 75:
                 status = "Suspicious"
-                summary = f"Suspicious PDF: Conversion artifacts or mild edits detected ({round(fake_prob, 2)}%)."
+                summary = f"Suspicious PDF: Conversion artifacts detected ({round(fake_prob, 2)}%)."
             else:
                 status = "Authentic"
                 summary = "Document Verified: No severe digital tampering detected."
         else:
-            media_type = "Image"
             if has_hard_metadata:
                 fake_prob = tampering_score
                 if tampering_score < 50:
@@ -70,11 +68,11 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
                     summary = f"Verified Original: Clean capture via {device_name}."
                 else:
                     status = "Manipulated"
-                    summary = f"Hardware found ({device_name}), but digital editing detected ({round(tampering_score, 2)}%)."
+                    summary = f"Hardware found ({device_name}), but editing detected ({round(tampering_score, 2)}%)."
             else:
                 if genai_score > 80 and tampering_score < 40:
                     status = "Suspicious"
-                    summary = f"Image degraded. High synthetic patterns ({round(genai_score, 2)}%) but no local editing. Likely heavy WhatsApp/Social Media compression."
+                    summary = f"Image degraded. High synthetic patterns ({round(genai_score, 2)}%)."
                     fake_prob = max(tampering_score, 50.0) 
                 elif genai_score > 60 and tampering_score >= 40:
                     status = "AI Generated"
@@ -82,14 +80,13 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
                     fake_prob = genai_score
                 elif tampering_score > 50:
                     status = "Manipulated"
-                    summary = f"Forgery Detected: Digital editing found ({round(tampering_score, 2)}%) with missing metadata."
+                    summary = f"Forgery Detected: Digital editing found ({round(tampering_score, 2)}%)."
                     fake_prob = tampering_score
                 else:
                     status = "Authentic"
-                    summary = "Real Image: Metadata stripped (Social Media), but pixels are natural."
+                    summary = "Real Image: Pixels are natural despite missing metadata."
                     fake_prob = max(tampering_score, genai_score)
 
-    
     return {
         "authenticity_status": status,
         "forensic_summary": summary,
