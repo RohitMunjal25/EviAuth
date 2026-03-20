@@ -2,60 +2,33 @@ import React, { useState } from "react";
 import "./LoginPage.css";
 
 export default function LoginPage({ onLogin }) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(""); 
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [isRegister, setIsRegister] = useState(false);
 
-  const API_BASE_URL = "http://13.61.105.7:10000"; 
-
-  const handleRegister = async () => {
+  const handleRegister = () => {
     if (!name || !email || !pass) return alert("Please fill all fields!");
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, pass }),
-      });
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    if (users.find(u => u.email === email)) return alert("User already exists!");
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Account Created Successfully! Now login.");
-        setIsRegister(false);
-        setPass("");
-        setName("");
-      } else {
-        alert(data.message || "Registration failed");
-      }
-    } catch (error) {
-      alert("Backend se connect nahi ho raha!");
-    }
+    users.push({ name, email, pass, history: [] });
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Account Created Successfully! Now login.");
+    
+    setIsRegister(false);
+    setPass("");
   };
 
-  const handleLogin = async () => {
-    if (!email || !pass) return alert("Please fill all fields!");
+  const handleLogin = () => {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const user = users.find(u => u.email === email && u.pass === pass);
+    if (!user) return alert("Invalid credentials");
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, pass }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem("currentUser", data.user.email);
-        localStorage.setItem("currentUserName", data.user.name);
-        onLogin("user");
-      } else {
-        alert(data.message || "Invalid credentials");
-      }
-    } catch (error) {
-      alert("Login failed! Check your connection.");
-    }
+    localStorage.setItem("currentUser", email);
+    localStorage.setItem("currentUserName", user.name || "User");
+    onLogin("user");
   };
 
   const handleGuest = () => {
@@ -66,11 +39,13 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <div className="login-wrapper">
+      
       <div className="login-left">
         <div className="login-brand">
           <div className="login-logo">⚡</div>
           <h1><span>Evi</span>Auth</h1>
           <p>AI Powered Evidence Authentication Platform</p>
+
           <div className="login-features">
             <div className="login-feature">
               <div className="login-feature-icon">🔍</div>
