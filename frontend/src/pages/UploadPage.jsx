@@ -61,12 +61,11 @@ export default function UploadPage({ goScan }) {
 
   return (
     <div className="upload-grid">
-      {/* LEFT COLUMN: UPLOAD ZONE */}
       <div className="upload-main card-box">
         <div 
           className={`dropzone ${file ? 'file-active' : ''}`} 
           onClick={() => fileRef.current.click()}
-          style={{ minHeight: '220px' }} // Thoda bada kar diya clean look ke liye
+          style={{ minHeight: '220px' }}
         >
           <input type="file" ref={fileRef} hidden onChange={handleFileChange} 
             accept="image/*,video/*,audio/*,.pdf" />
@@ -103,7 +102,6 @@ export default function UploadPage({ goScan }) {
         </button>
       </div>
 
-      {/* RIGHT COLUMN: SIDEBAR INFO */}
       <div className="upload-sidebar card-box">
         <h4 style={{ fontSize: '14px', marginBottom: '16px' }}>System Info</h4>
         <div className="info-rows">

@@ -40,7 +40,6 @@ export default function Dashboard({ setPage }) {
     { label: "Tampered", value: stats.tampered, color: "#f87171", icon: "❌" },
   ];
 
-  // Helper to color code the verdict in the table
   const getVerdictStyle = (verdict) => {
     if (verdict.includes("Original") || verdict.includes("Authentic")) return { color: "#4ade80", fontWeight: "bold" };
     if (verdict.includes("Edited") || verdict.includes("Tampered")) return { color: "#f87171", fontWeight: "bold" };
@@ -54,8 +53,7 @@ export default function Dashboard({ setPage }) {
         <p style={{ color: "#94a3b8" }}>Overview of your evidence analysis activity</p>
       </div>
 
-      {/* --- STATS GRID --- */}
-      <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
+       <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
         {statCards.map((s, i) => (
           <div className="stat-card card-box" key={i} style={{ textAlign: 'center', padding: '25px', background: '#111827', borderRadius: '12px', borderTop: `3px solid ${s.color}` }}>
             <div className="stat-icon" style={{ fontSize: '32px', marginBottom: '10px' }}>{s.icon}</div>
@@ -65,7 +63,6 @@ export default function Dashboard({ setPage }) {
         ))}
       </div>
 
-      {/* --- QUICK ACTIONS --- */}
       <div className="quick-actions" style={{ display: 'flex', gap: '15px', marginBottom: '30px' }}>
         <button className="btn btn-blue" onClick={() => setPage("upload")} style={{ flex: 1, padding: '15px', fontSize: '16px' }}>
           <span style={{ marginRight: '8px' }}>📤</span> Upload New Evidence
@@ -75,7 +72,6 @@ export default function Dashboard({ setPage }) {
         </button>
       </div>
 
-      {/* --- RECENT ANALYSES --- */}
       <div className="recent-analyses card-box" style={{ background: '#111827', padding: '25px', borderRadius: '12px' }}>
         <h3 style={{ marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid #1e293b', paddingBottom: '10px' }}>Recent Analyses</h3>
 

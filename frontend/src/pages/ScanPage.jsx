@@ -25,11 +25,10 @@ export default function ScanPage({ setPage, file }) {
   const [progress, setProgress] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
   const [logs, setLogs] = useState(["> Initializing forensic engine..."]);
-  const logEndRef = useRef(null); // Terminal scroll ke liye ref
+  const logEndRef = useRef(null); 
 
   const total = STEPS.reduce((a, s) => a + s.duration, 0);
 
-  // 🔥 Auto-scroll logic: Jab bhi naya log aaye, niche scroll karo
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [logs]);
@@ -114,12 +113,11 @@ export default function ScanPage({ setPage, file }) {
           })}
         </div>
 
-        {/* LOG TERMINAL */}
         <div className="scan-log">
           {logs.map((line, i) => (
             <div key={i} className="log-line">{line}</div>
           ))}
-          <div ref={logEndRef} /> {/* Scroll target */}
+          <div ref={logEndRef} /> 
           <span className="log-cursor">█</span>
         </div>
       </div>

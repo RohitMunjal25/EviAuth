@@ -5,21 +5,16 @@ import jsPDF from "jspdf";
 export default function ResultPage({ setPage, file, resultData }) {
   const report = resultData?.report || {};
   const fileName = file?.name || "evidence.jpg";
-  
-  // 🔥 FIX 1: Backend ka sahi variable name use kiya
   const verdictLabel = report.authenticity_status || "Unknown";
   const score = report.manipulation_probability ?? 0;
 
-  // Dynamic Ring Logic
   const strokeDasharray = `${(score * 3.39).toFixed(0)} 339`;
 
-  // Color mapping based on Authentic / Fake
   const verdictColor = 
     verdictLabel.includes("Authentic") || verdictLabel.includes("Original") ? "#4ade80" : 
     verdictLabel.includes("Fake") || verdictLabel.includes("Tampered") ? "#f87171" : 
     "#fbbf24";
 
-  // 🔥 FIX 2: PDF Download Logic wapas daal di
   const downloadPDF = () => {
     const pdf = new jsPDF();
 
@@ -42,7 +37,6 @@ export default function ResultPage({ setPage, file, resultData }) {
     pdf.setFont("helvetica", "normal");
     y += 10;
     
-    // Summary ko wrap karne ke liye taaki PDF se bahar na jaye
     const splitSummary = pdf.splitTextToSize(report.forensic_summary || "N/A", 170);
     pdf.text(splitSummary, 20, y);
     y += (splitSummary.length * 7) + 10;

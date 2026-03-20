@@ -14,7 +14,6 @@ export default function App() {
   const [analysisData, setAnalysisData] = useState(null);
   const [userType, setUserType] = useState(null); 
 
-  // Auto-Login logic on refresh
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser");
     if (currentUser) {
@@ -31,7 +30,7 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
-    localStorage.removeItem("currentUserName"); // Name bhi saaf karo
+    localStorage.removeItem("currentUserName"); 
     setUserType(null);
     setPage('login'); 
   };

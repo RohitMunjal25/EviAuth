@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./HistoryPage.css";
-import jsPDF from "jspdf"; // PDF Download ke liye
-
-// SCORE LOGIC: Low Score (0-20) = Authentic, High Score (60-100) = Tampered
+import jsPDF from "jspdf"; 
 function getVerdict(score) {
   if (score <= 20) return { label: "Authentic", cls: "badge-green", pill: "pill-green" };
   if (score <= 60) return { label: "Suspicious", cls: "badge-yellow", pill: "pill-yellow" };
@@ -16,7 +14,6 @@ export default function HistoryPage({ setPage }) {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  // 1. Load Data from Local Storage
   useEffect(() => {
     if (!currentUser) return;
     const users = JSON.parse(localStorage.getItem("users") || "[]");
@@ -25,10 +22,9 @@ export default function HistoryPage({ setPage }) {
     if (!user) return;
 
     const formatted = (user.history || []).map((h, i) => ({
-      id: i, // Ye original index hai, delete karne ke kaam aayega
+      id: i, 
       name: h.name,
       date: h.date,
-      // Naye records mein 'score' hoga, purano mein nahi hai toh fallback lagaya hai
       score: h.score !== undefined ? h.score : (h.verdict.includes("Authentic") ? 0 : 80),
       verdictText: h.verdict
     }));
@@ -36,7 +32,6 @@ export default function HistoryPage({ setPage }) {
     setRecords(formatted.reverse());
   }, [currentUser]);
 
-  // 2. Permanent Delete Function
   const handleDelete = (idToDelete) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
 
@@ -44,16 +39,13 @@ export default function HistoryPage({ setPage }) {
     const userIndex = users.findIndex(u => u.email === currentUser);
     
     if (userIndex !== -1) {
-      // LocalStorage se remove karo (Filter out by original index)
       users[userIndex].history = users[userIndex].history.filter((_, i) => i !== idToDelete);
       localStorage.setItem("users", JSON.stringify(users));
       
-      // Screen (State) se remove karo
       setRecords(prev => prev.filter(r => r.id !== idToDelete));
     }
   };
 
-  // 3. Download PDF Function
   const downloadRowPDF = (row) => {
     const pdf = new jsPDF();
     pdf.setFont("helvetica", "bold");
@@ -74,10 +66,7 @@ export default function HistoryPage({ setPage }) {
     pdf.save(`${row.name.split('.')[0]}_Report.pdf`);
   };
 
-  // 4. View Result Function
   const handleView = (row) => {
-    // Abhi local storage mein full report save nahi hoti, isliye alert dikha rahe hain.
-    // Agar future mein DB connect ho, toh yahan setPage("result") call kar sakte ho.
     alert(`File: ${row.name}\nVerdict: ${row.verdictText}\nScore: ${row.score}%\n\nPlease download the PDF for the summary report.`);
   };
 
@@ -95,7 +84,7 @@ export default function HistoryPage({ setPage }) {
         <p>{records.length} total records · {filteredRecords.length} shown</p>
       </div>
 
-      {/* --- FILTERS & SEARCH --- */}
+      
       <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:16, alignItems:'center' }}>
         {[
           { id:'all', label:'All' },
@@ -126,7 +115,6 @@ export default function HistoryPage({ setPage }) {
         </div>
       </div>
 
-      {/* --- HISTORY TABLE --- */}
       <div className="card" style={{ padding:0, overflow:'hidden' }}>
         <div className="table-wrap">
           {filteredRecords.length === 0 ? (
@@ -157,7 +145,6 @@ export default function HistoryPage({ setPage }) {
                       <td><span className={`pill ${v.pill}`}>{row.score}%</span></td>
                       <td><span className={`badge ${v.cls}`}>{v.label}</span></td>
                       
-                      {/* 🔥 NAYE ACTION BUTTONS 🔥 */}
                       <td style={{ display: 'flex', gap: '8px', justifyContent: 'center', padding: '10px' }}>
                         <button 
                           className="btn btn-blue btn-sm" 
