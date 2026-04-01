@@ -117,9 +117,9 @@ python app.py
 
 * Models will be **automatically downloaded**
 * Required tools will be initialized
-* System will configure itself
+* System will configure itself also all requirements
 
-👉 No manual model setup required
+👉 No manual model setup required 
 
 ---
 
@@ -136,7 +136,7 @@ python app.py
 
 * Web dashboard for detailed reports
 * Real-time analysis pipeline
-* Model accuracy improvements
+* Model accuracy improvements 
 
 ---
 
