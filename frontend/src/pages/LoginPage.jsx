@@ -7,28 +7,43 @@ export default function LoginPage({ onLogin }) {
   const [pass, setPass] = useState("");
   const [isRegister, setIsRegister] = useState(false);
 
-  const handleRegister = () => {
+  const API_URL = "http://localhost:10000";
+
+  const handleRegister = async () => {
     if (!name || !email || !pass) return alert("Please fill all fields!");
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    if (users.find(u => u.email === email)) return alert("User already exists!");
-
-    users.push({ name, email, pass, history: [] });
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Account Created Successfully! Now login.");
-    
-    setIsRegister(false);
-    setPass("");
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, pass })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert("Account Created! Please Login.");
+        setIsRegister(false);
+      } else {
+        alert(data.error);
+      }
+    } catch (err) { alert("Server Error"); }
   };
 
-  const handleLogin = () => {
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find(u => u.email === email && u.pass === pass);
-    if (!user) return alert("Invalid credentials");
-
-    localStorage.setItem("currentUser", email);
-    localStorage.setItem("currentUserName", user.name || "User");
-    onLogin("user");
+  const handleLogin = async () => {
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, pass })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("currentUser", data.email);
+        localStorage.setItem("currentUserName", data.name);
+        onLogin("user");
+      } else {
+        alert(data.error);
+      }
+    } catch (err) { alert("Server Error"); }
   };
 
   const handleGuest = () => {
@@ -39,20 +54,18 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <div className="login-wrapper">
-      
       <div className="login-left">
         <div className="login-brand">
           <div className="login-logo">⚡</div>
           <h1><span>Evi</span>Auth</h1>
           <p>AI Powered Evidence Authentication Platform</p>
-
           <div className="login-features">
             <div className="login-feature">
               <div className="login-feature-icon">🔍</div>
               Detect deepfakes instantly
             </div>
             <div className="login-feature">
-              <div className="login-feature-icon">📊</div>
+              <div className="login-feature-icon">📄</div>
               Generate forensic reports
             </div>
             <div className="login-feature">
