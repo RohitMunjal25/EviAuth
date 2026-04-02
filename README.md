@@ -1,145 +1,68 @@
-# 🔍 EviAuth
+🔍EviAuth
+Advanced Multi-Modal Digital Forensics & AI-Authenticity Suite
+EviAuth is a high-integrity forensic ecosystem designed to detect sophisticated digital forgeries. By synthesizing 10+ state-of-the-art Deep Learning models, the platform provides a robust defense against Deepfakes, AI-generated media, and document tampering.
 
-**AI-Based Digital Evidence Authenticity Platform 🚀**
-
----
-
-## 📌 Project Overview
-
-EviAuth is an AI-powered digital forensics platform designed to detect manipulation and forgery in **images, videos, audio, and documents**.
-
-The system integrates multiple machine learning models and forensic tools to analyze media authenticity and provide reliable results.
-
-> "Trust your data. Verify your evidence." 🔐
-
----
-
-## ⚡ Key Features
-
-### 🧠 Multi-Modal Detection
-
-* Supports **Image, Video, Audio, and Document analysis**
-* Uses **10+ trained ML models** for high accuracy detection
-
----
-
-### 🔐 Forensic Analysis
-
-* Metadata extraction using **ExifTool**
-* Media processing using **FFmpeg**
-* Deep inspection of file authenticity
-
----
-
-### ⚙️ Auto Model Setup (Plug & Play)
-
-* No manual setup required
-* On first run, the system automatically:
-
-  * Downloads required models
-  * Sets up dependencies
-  * Configures environment
-
-👉 Just run one command and everything is ready
-
----
-
-## 🧠 Models Used
-
-### 🖼️ Image Models
-
-* CASIA
-* CIFAKE
-* ExifTool (metadata analysis)
-
----
-
-### 📄 Document Model
-
-* MIDV-500
-
----
-
-### 🎥 Video Models
-
-* FaceForensics++
-* DFDC
-* FFmpeg (frame extraction & processing)
-* ExifTool
-
----
-
-### 🔊 Audio Models
-
-* ASVspoof LA
-* ASVspoof PA
-
----
-
-## 🛠️ Tech Stack
-
-| Layer      | Technology           |
-| ---------- | -------------------- |
-| Backend    | Python (Flask)       |
-| ML Models  | Deep Learning Models |
-| Processing | FFmpeg, ExifTool     |
-| Database   | (Optional if used)   |
+"In the era of synthetic media, verify every byte." 🔐
 
 
-## ⚙️ Installation & Setup
+🚀 Core Capabilities
+🧠 Neural Ensemble Detection
+Deepfake Mitigation: Detects high-fidelity face-swaps and GAN-generated video content.
+Audio Spoofing Protection: Identifies synthetic voice clones and replayed speech using ASVspoof protocols.
+Document Integrity: Validates ID cards and legal certificates using the MIDV-500 dataset standards.
+Image Forgery Localization: Detects splicing, cloning, and resampling artifacts via CASIA/CIFAKE models.
 
-### 1️⃣ Clone Repository
 
-```id="eviauth2"
-git clone https://github.com/yourusername/EviAuth.git
+🔬 Forensic Tool Integration
+Metadata Forensics: Deep-header inspection using ExifTool to uncover GPS-spoofing and software-edit traces.
+Signal Processing: Frame-level decomposition and audio frequency analysis using FFmpeg and Librosa.
+
+
+🏗️ Technical ArchitectureDomainIntegrated Models & Technologies
+
+🖼️ Image                  CASIA (Splicing), CIFAKE (Gen-AI), OpenCV
+🎥 Video                  FaceForensics++, DFDC (Deepfakes), FFmpeg
+🔊 Audio                  ASVspoof LA (Logical Access), ASVspoof PA (Physical Access)
+📄 Document               MIDV-500 (Forgery Detection), PyMuPDF
+
+
+The Tech Stack
+Backend: Flask (Python)
+AI Engine: TensorFlow, Keras, PyTorch
+Forensics: ExifTool, FFmpeg, Librosa
+
+
+⚙️ Deployment & Setup
+1️⃣ Clone the Infrastructure
+Bash
+git clone https://github.com/RohitMunjal25/EviAuth.git
 cd EviAuth
-```
+2️⃣ Environment Configuration
+Bash
+# Initialize virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
 
----
-
-### 2️⃣ Install Dependencies
-
-```id="eviauth3"
+# Install dependencies
 pip install -r requirements.txt
-```
-
----
-
-### 3️⃣ Run Application
-
-```id="eviauth4"
+3️⃣ Execution
+Bash
 python app.py
-```
 
----
 
-## 🚀 First Run Behavior
+⚡ Zero-Config "Plug & Play"
+EviAuth is engineered for immediate deployment. On the First Run, the system autonomously:
+Retrieves optimized model weights (H5/PTH) from secure repositories.
+Validates hardware acceleration (CUDA/OpenCL).
+Initializes forensic binary paths automatically.
 
-* Models will be **automatically downloaded**
-* Required tools will be initialized
-* System will configure itself also all requirements
 
-👉 No manual model setup required 
+🛠️ Future Roadmap
+[ ] Interactive Dashboard: React-based forensic report visualization.
+[ ] Real-time Stream Analysis: Live video feed authenticity checking.
+[ ] API Access: RESTful endpoints for enterprise security workflows.
 
----
-
-## 📊 Capabilities
-
-* Detect deepfake media
-* Analyze metadata for tampering
-* Identify forged documents
-* Validate audio authenticity
-
----
-
-## 📌 Future Improvements
-
-* Web dashboard for detailed reports
-* Real-time analysis pipeline
-* Model accuracy improvements 
-
----
-
-## 👨‍💻 Author
-
+👨‍💻 Authors
 Rohit Munjal & Yogita Gupta
+
+Developed for the advancement of Information Security and Digital Trust.
