@@ -1,6 +1,9 @@
 import os
 from dotenv import load_dotenv
 from model_downloader import ensure_models_exist
+
+ensure_models_exist()
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
@@ -17,7 +20,6 @@ from report import generate_report
 from pydub import AudioSegment
 from models.audiospoof import detect_audio_spoof
 from backendstore import UPLOAD_FOLDER
-
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 bcrypt = Bcrypt(app)
@@ -28,7 +30,6 @@ def handle_options():
         return '', 200
 
 load_dotenv()
-ensure_models_exist()
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 MONGO_URI = os.getenv("MONGO_URL", "mongodb://localhost:27017/forensics_db")
