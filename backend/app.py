@@ -3,25 +3,12 @@ import sys
 from dotenv import load_dotenv
 import subprocess
 from model_downloader import ensure_models_exist
-
-def install_requirements():
-    req_file = "requirements.txt"
-    if os.path.exists(req_file):
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_file])
-        except:
-            pass
-
-install_requirements()
-load_dotenv()
-ensure_models_exist()
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
-import time
+from flask_bcrypt import Bcrypt
 
 from models.casiaimage import detect_casia_fake  
 from models.cifakeimage import detect_ai_generated 
@@ -35,25 +22,55 @@ from backendstore import UPLOAD_FOLDER
 
 app = Flask(__name__)
 CORS(app)
+bcrypt = Bcrypt(app)
 
+load_dotenv()
+ensure_models_exist()
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 MONGO_URI = os.getenv("MONGO_URL", "mongodb://localhost:27017/forensics_db")
-
-db = None
-collection = None
 
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
     client.server_info()
     db = client["digital_forensics"]
-    collection = db["history"]
+    users_collection = db["users"]
+    history_collection = db["history"]
 except:
     pass
+
+@app.route("/register", methods=["POST"])
+def register():
+    data = request.json
+    if users_collection.find_one({"email": data['email']}):
+        return jsonify({"error": "User already exists"}), 400
+    
+    hashed_pass = bcrypt.generate_password_hash(data['pass']).decode('utf-8')
+    users_collection.insert_one({
+        "name": data['name'],
+        "email": data['email'],
+        "password": hashed_pass,
+        "created_at": datetime.now()
+    })
+    return jsonify({"message": "Account created successfully"}), 201
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    user = users_collection.find_one({"email": data['email']})
+    
+    if user and bcrypt.check_password_hash(user['password'], data['pass']):
+        return jsonify({
+            "name": user['name'],
+            "email": user['email'],
+            "status": "success"
+        }), 200
+    return jsonify({"error": "Invalid email or password"}), 401
 
 @app.route("/upload", methods=["POST"])
 def upload():
     file = request.files.get("file")
+    user_email = request.form.get("email")
     if not file:
         return jsonify({"error": "No file uploaded"}), 400
 
@@ -69,7 +86,6 @@ def upload():
         ext = file.filename.split(".")[-1].lower()
 
         if ext == "pdf":
-            print(" Running Document Forensics (MIDV-500 + ELA)...")
             metadata = extract_metadata(path)
             doc_result = detect_document_fake(path)
             
@@ -81,21 +97,18 @@ def upload():
             report = generate_report(metadata, image_forensics=image_result, filename=file.filename)
 
         elif ext in ["jpg", "jpeg", "png", "tiff", "bmp"]:
-            print("Running Hybrid Image Forensics (CASIA + GenAI)...")
             metadata = extract_metadata(path)
             
             try:
                 casia_res = detect_casia_fake(path)
                 tampering_score = casia_res.get("fake_probability", casia_res.get("score", casia_res.get("doc_score", 0)))
             except Exception as e:
-                print(f" CASIA Error: {e}")
                 tampering_score = 0
 
             try:
                 genai_res = detect_ai_generated(path)
                 genai_score = genai_res.get("genai_score", 0)
             except Exception as e:
-                print(f"cifake Error: {e}")
                 genai_score = 0
             
             image_result = {
@@ -106,14 +119,11 @@ def upload():
             report = generate_report(metadata, image_forensics=image_result, filename=file.filename)
 
         elif ext in ["mp4", "mov", "avi", "mkv"]:
-            print("🎥 Running Video Forensics...")
             video_result = run_video_forensics(path)
             metadata = video_result.get("metadata", {})
             report = generate_report(metadata, video_forensics=video_result, filename=file.filename)
         
         elif ext in ["mp3", "wav", "m4a", "flac", "ogg", "aac"]:
-            print(f"🎙️ Processing Audio File: {file.filename}")
-            
             wav_filename = f"{file.filename.split('.')[0]}_converted.wav"
             wav_path = os.path.join(UPLOAD_FOLDER, wav_filename)
             
@@ -121,7 +131,6 @@ def upload():
                 audio = AudioSegment.from_file(path)
                 audio = audio.set_frame_rate(16000).set_channels(1)
                 audio.export(wav_path, format="wav")
-                print(f"Converted to WAV: {wav_filename}")
             except Exception as e:
                 return jsonify({"error": f"Audio conversion failed: {str(e)}"}), 400
 
@@ -136,6 +145,7 @@ def upload():
             return jsonify({"error": "Unsupported file type"}), 400
 
         data = {
+            "user_email": user_email,
             "filename": file.filename,
             "time": datetime.now(),
             "metadata": make_json_safe(metadata),
@@ -146,24 +156,23 @@ def upload():
         }
         
         inserted_id = "not_saved_to_db"
-        if collection is not None:
-            inserted = collection.insert_one(data)
+        if history_collection is not None:
+            inserted = history_collection.insert_one(data)
             inserted_id = str(inserted.inserted_id)
             
         return jsonify({"id": inserted_id, "report": report})
 
     except Exception as e:
-        print(f" Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if os.path.exists(path): os.remove(path)
 
 @app.route("/report/<id>", methods=["GET"])
 def get_report(id):
-    if collection is None:
+    if history_collection is None:
         return jsonify({"error": "Database not connected"}), 503
     try:
-        data = collection.find_one({"_id": ObjectId(id)})
+        data = history_collection.find_one({"_id": ObjectId(id)})
         if data:
             data["_id"] = str(data["_id"])
             return jsonify(data)
@@ -173,16 +182,20 @@ def get_report(id):
 
 @app.route("/history", methods=["GET"])
 def history():
-    if collection is None:
+    user_email = request.args.get('email')
+    if history_collection is None:
         return jsonify([])
-    data = list(collection.find())
+    
+    query = {"user_email": user_email} if user_email else {}
+    data = list(history_collection.find(query).sort("time", -1))
+    
     for d in data:
         d["_id"] = str(d["_id"])
     return jsonify(data)
 
 @app.route("/health")
 def health():
-    return {"status": "alive", "message": "Backend is running "}, 200
+    return {"status": "alive", "message": "Backend is running"}, 200
 
 def make_json_safe(data):
     if isinstance(data, dict):
