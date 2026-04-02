@@ -4,7 +4,6 @@
   gap: 20px;
 }
 
-/* Drop zone */
 .dropzone {
   min-height: 180px;
   border: 2px dashed #334155;
@@ -52,7 +51,7 @@
 }
 .remove-btn:hover { color: #f87171; }
 
-/* Options */
+
 .options-list { display: flex; flex-direction: column; gap: 8px; }
 .option-row {
   display: flex;
@@ -83,7 +82,7 @@
 .opt-label { font-size: 13px; font-weight: 600; }
 .opt-desc  { font-size: 11px; color: #64748b; }
 
-/* Sidebar info */
+
 .info-rows { display: flex; flex-direction: column; gap: 10px; }
 .info-row  { display: flex; justify-content: space-between; font-size: 13px; }
 
