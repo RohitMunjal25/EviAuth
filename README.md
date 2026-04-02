@@ -1,145 +1,125 @@
-# 🔍 EviAuth
+# 🔍 EviAuth – Advanced Multi-Modal Digital Forensics & AI Authenticity Suite
 
-**AI-Based Digital Evidence Authenticity Platform 🚀**
+> **"In the era of synthetic media, verify every byte." 🔐**
 
----
-
-## 📌 Project Overview
-
-EviAuth is an AI-powered digital forensics platform designed to detect manipulation and forgery in **images, videos, audio, and documents**.
-
-The system integrates multiple machine learning models and forensic tools to analyze media authenticity and provide reliable results.
-
-> "Trust your data. Verify your evidence." 🔐
+EviAuth is a high-integrity forensic ecosystem designed to detect sophisticated digital forgeries. By combining **10+ state-of-the-art Deep Learning models**, the platform provides a powerful defense against **deepfakes, AI-generated media, and document tampering**.
 
 ---
 
-## ⚡ Key Features
+## 🚀 Core Capabilities
 
-### 🧠 Multi-Modal Detection
+### 🧠 Neural Ensemble Detection
 
-* Supports **Image, Video, Audio, and Document analysis**
-* Uses **10+ trained ML models** for high accuracy detection
+* **Deepfake Mitigation**
+  Detects high-fidelity face-swaps and GAN-generated video content.
 
----
+* **Audio Spoofing Protection**
+  Identifies synthetic voice clones and replay attacks using ASVspoof protocols.
 
-### 🔐 Forensic Analysis
+* **Document Integrity Verification**
+  Validates ID cards and legal documents using MIDV-500 standards.
 
-* Metadata extraction using **ExifTool**
-* Media processing using **FFmpeg**
-* Deep inspection of file authenticity
-
----
-
-### ⚙️ Auto Model Setup (Plug & Play)
-
-* No manual setup required
-* On first run, the system automatically:
-
-  * Downloads required models
-  * Sets up dependencies
-  * Configures environment
-
-👉 Just run one command and everything is ready
+* **Image Forgery Localization**
+  Detects splicing, cloning, and resampling artifacts using CASIA & CIFAKE models.
 
 ---
 
-## 🧠 Models Used
+## 🔬 Forensic Tool Integration
 
-### 🖼️ Image Models
+* **Metadata Forensics**
+  Deep header inspection using ExifTool to detect:
 
-* CASIA
-* CIFAKE
-* ExifTool (metadata analysis)
+  * GPS spoofing
+  * Editing software traces
 
----
+* **Signal Processing**
 
-### 📄 Document Model
-
-* MIDV-500
-
----
-
-### 🎥 Video Models
-
-* FaceForensics++
-* DFDC
-* FFmpeg (frame extraction & processing)
-* ExifTool
+  * Frame-level video decomposition using FFmpeg
+  * Audio frequency analysis using Librosa
 
 ---
 
-### 🔊 Audio Models
+## 🏗️ Technical Architecture
 
-* ASVspoof LA
-* ASVspoof PA
+### 📊 Integrated Models & Technologies
+
+| Domain      | Technologies                              |
+| ----------- | ----------------------------------------- |
+| 🖼️ Image   | CASIA (Splicing), CIFAKE (Gen-AI), OpenCV |
+| 🎥 Video    | FaceForensics++, DFDC, FFmpeg             |
+| 🔊 Audio    | ASVspoof LA & PA                          |
+| 📄 Document | MIDV-500, PyMuPDF                         |
 
 ---
 
-## 🛠️ Tech Stack
+## ⚙️ Tech Stack
 
-| Layer      | Technology           |
-| ---------- | -------------------- |
-| Backend    | Python (Flask)       |
-| ML Models  | Deep Learning Models |
-| Processing | FFmpeg, ExifTool     |
-| Database   | (Optional if used)   |
+* **Backend:** Flask (Python)
+* **AI Engine:** TensorFlow, Keras, PyTorch
+* **Forensics Tools:** ExifTool, FFmpeg, Librosa
 
+---
 
-## ⚙️ Installation & Setup
+## ⚙️ Deployment & Setup
 
-### 1️⃣ Clone Repository
+### 1️⃣ Clone the Repository
 
-```id="eviauth2"
-git clone https://github.com/yourusername/EviAuth.git
+```bash
+git clone https://github.com/RohitMunjal25/EviAuth.git
 cd EviAuth
 ```
 
----
+### 2️⃣ Setup Environment
 
-### 2️⃣ Install Dependencies
+```bash
+# Create virtual environment
+python -m venv venv
 
-```id="eviauth3"
+# Activate environment
+# Windows:
+.\venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
----
+### 3️⃣ Run the Application
 
-### 3️⃣ Run Application
-
-```id="eviauth4"
+```bash
 python app.py
 ```
 
 ---
 
-## 🚀 First Run Behavior
+## ⚡ Zero-Config "Plug & Play"
 
-* Models will be **automatically downloaded**
-* Required tools will be initialized
-* System will configure itself also all requirements
+On first run, EviAuth automatically:
 
-👉 No manual model setup required 
-
----
-
-## 📊 Capabilities
-
-* Detect deepfake media
-* Analyze metadata for tampering
-* Identify forged documents
-* Validate audio authenticity
+* 📥 Downloads optimized model weights (H5/PTH)
+* ⚡ Detects hardware acceleration (CUDA/OpenCL)
+* 🔧 Configures forensic tools and binaries
 
 ---
 
-## 📌 Future Improvements
+## 🛠️ Future Roadmap
 
-* Web dashboard for detailed reports
-* Real-time analysis pipeline
-* Model accuracy improvements 
+* [ ] 📊 Interactive Dashboard (React-based visualization)
+* [ ] 🎥 Real-time Stream Analysis
+* [ ] 🌐 REST API for enterprise integration
 
 ---
 
-## 👨‍💻 Author
+## 👨‍💻 Authors
 
-Rohit Munjal & Yogita Gupta
+* **Rohit Munjal**
+* **Yogita Gupta**
+
+---
+
+## 🎯 Purpose
+
+Developed for advancing **Information Security**, **Digital Forensics**, and **Trust in AI-generated content**.
+
+---
