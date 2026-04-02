@@ -1,5 +1,6 @@
 flask
 flask-cors
+flask-bcrypt
 pymongo
 python-dotenv
 tensorflow
