@@ -7,7 +7,7 @@ export default function LoginPage({ onLogin }) {
   const [pass, setPass] = useState("");
   const [isRegister, setIsRegister] = useState(false);
 
-  const API_URL = "http://localhost:10000";
+  const API_URL = "https://pirates-canyon-person-cooperation.trycloudflare.com";
 
   const handleRegister = async () => {
     if (!name || !email || !pass) return alert("Please fill all fields!");
