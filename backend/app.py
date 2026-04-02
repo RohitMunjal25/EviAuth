@@ -1,7 +1,5 @@
 import os
-import sys
 from dotenv import load_dotenv
-import subprocess
 from model_downloader import ensure_models_exist
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -21,14 +19,13 @@ from models.audiospoof import detect_audio_spoof
 from backendstore import UPLOAD_FOLDER
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, supports_credentials=True)
 bcrypt = Bcrypt(app)
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-    return response
+
+@app.before_request
+def handle_options():
+    if request.method == "OPTIONS":
+        return '', 200
 
 load_dotenv()
 ensure_models_exist()
@@ -43,27 +40,33 @@ try:
     users_collection = db["users"]
     history_collection = db["history"]
 except:
-    pass
+    users_collection = None
+    history_collection = None
 
-@app.route("/register", methods=["POST"])
+@app.route("/register", methods=["POST", "OPTIONS"])
 def register():
+    if request.method == "OPTIONS":
+        return '', 200
     data = request.json
-    if users_collection.find_one({"email": data['email']}):
+    if users_collection and users_collection.find_one({"email": data['email']}):
         return jsonify({"error": "User already exists"}), 400
     
     hashed_pass = bcrypt.generate_password_hash(data['pass']).decode('utf-8')
-    users_collection.insert_one({
-        "name": data['name'],
-        "email": data['email'],
-        "password": hashed_pass,
-        "created_at": datetime.now()
-    })
+    if users_collection:
+        users_collection.insert_one({
+            "name": data['name'],
+            "email": data['email'],
+            "password": hashed_pass,
+            "created_at": datetime.now()
+        })
     return jsonify({"message": "Account created successfully"}), 201
 
-@app.route("/login", methods=["POST"])
+@app.route("/login", methods=["POST", "OPTIONS"])
 def login():
+    if request.method == "OPTIONS":
+        return '', 200
     data = request.json
-    user = users_collection.find_one({"email": data['email']})
+    user = users_collection.find_one({"email": data['email']}) if users_collection else None
     
     if user and bcrypt.check_password_hash(user['password'], data['pass']):
         return jsonify({
@@ -73,8 +76,11 @@ def login():
         }), 200
     return jsonify({"error": "Invalid email or password"}), 401
 
-@app.route("/upload", methods=["POST"])
+@app.route("/upload", methods=["POST", "OPTIONS"])
 def upload():
+    if request.method == "OPTIONS":
+        return '', 200
+
     file = request.files.get("file")
     user_email = request.form.get("email")
     if not file:
@@ -108,13 +114,13 @@ def upload():
             try:
                 casia_res = detect_casia_fake(path)
                 tampering_score = casia_res.get("fake_probability", casia_res.get("score", casia_res.get("doc_score", 0)))
-            except Exception as e:
+            except:
                 tampering_score = 0
 
             try:
                 genai_res = detect_ai_generated(path)
                 genai_score = genai_res.get("genai_score", 0)
-            except Exception as e:
+            except:
                 genai_score = 0
             
             image_result = {
@@ -133,19 +139,17 @@ def upload():
             wav_filename = f"{file.filename.split('.')[0]}_converted.wav"
             wav_path = os.path.join(UPLOAD_FOLDER, wav_filename)
             
-            try:
-                audio = AudioSegment.from_file(path)
-                audio = audio.set_frame_rate(16000).set_channels(1)
-                audio.export(wav_path, format="wav")
-            except Exception as e:
-                return jsonify({"error": f"Audio conversion failed: {str(e)}"}), 400
+            audio = AudioSegment.from_file(path)
+            audio = audio.set_frame_rate(16000).set_channels(1)
+            audio.export(wav_path, format="wav")
 
             metadata = extract_metadata(path)
             audio_result = detect_audio_spoof(wav_path)
             
             report = generate_report(metadata, audio_forensics=audio_result, filename=file.filename)
             
-            if os.path.exists(wav_path): os.remove(wav_path)
+            if os.path.exists(wav_path):
+                os.remove(wav_path)
 
         else:
             return jsonify({"error": "Unsupported file type"}), 400
@@ -162,7 +166,7 @@ def upload():
         }
         
         inserted_id = "not_saved_to_db"
-        if history_collection is not None:
+        if history_collection:
             inserted = history_collection.insert_one(data)
             inserted_id = str(inserted.inserted_id)
             
@@ -171,7 +175,8 @@ def upload():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if os.path.exists(path): os.remove(path)
+        if os.path.exists(path):
+            os.remove(path)
 
 @app.route("/report/<id>", methods=["GET"])
 def get_report(id):
@@ -205,10 +210,7 @@ def health():
 
 def make_json_safe(data):
     if isinstance(data, dict):
-        new_dict = {}
-        for k, v in data.items():
-            new_dict[str(k)] = make_json_safe(v)
-        return new_dict
+        return {str(k): make_json_safe(v) for k, v in data.items()}
     elif isinstance(data, list):
         return [make_json_safe(v) for v in data]
     elif isinstance(data, (int, float, str, bool)) or data is None:
@@ -219,3 +221,4 @@ def make_json_safe(data):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
