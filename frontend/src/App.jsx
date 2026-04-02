@@ -74,11 +74,9 @@ export default function App() {
           ))}
         </nav>
 
-        {/* ── Sidebar Footer (Ab Dynamic hai) ── */}
         <div className="sidebar-footer">
           <div className="user-info">
             
-            {/* 🔥 AVATAR: Naam ka pehla akshar dikhayega 🔥 */}
             <div className="avatar">
               {userType === 'guest' 
                 ? 'G' 
@@ -89,14 +87,13 @@ export default function App() {
             </div>
 
             <div>
-              {/* 🔥 NAME: Registered Name dikhayega 🔥 */}
+              
               <div className="user-name">
                 {userType === 'guest' 
                   ? 'Guest User' 
                   : (localStorage.getItem("currentUserName") || "User")}
               </div>
               
-              {/* 🔥 ROLE/EMAIL 🔥 */}
               <div className="user-role">
                 {userType === 'guest' 
                   ? 'Demo Mode' 
