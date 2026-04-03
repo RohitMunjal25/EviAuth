@@ -59,18 +59,30 @@ def health():
 
 @app.route("/register", methods=["POST"])
 def register():
-    data = request.json
-    if users_collection and users_collection.find_one({"email": data['email']}):
+    if users_collection is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    password = data.get("pass") or data.get("password")
+
+    if not password:
+        return jsonify({"error": "Password missing"}), 400
+
+    if users_collection.find_one({"email": data['email']}):
         return jsonify({"error": "User already exists"}), 400
-    
-    hashed_pass = bcrypt.generate_password_hash(data['pass']).decode('utf-8')
-    if users_collection:
-        users_collection.insert_one({
-            "name": data['name'],
-            "email": data['email'],
-            "password": hashed_pass,
-            "created_at": datetime.now()
-        })
+
+    hashed_pass = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    users_collection.insert_one({
+        "name": data['name'],
+        "email": data['email'],
+        "password": hashed_pass
+    })
+
     return jsonify({"message": "Account created successfully"}), 201
 
 @app.route("/login", methods=["POST"])
