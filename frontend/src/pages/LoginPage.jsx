@@ -7,7 +7,7 @@ export default function LoginPage({ onLogin }) {
   const [pass, setPass] = useState("");
   const [isRegister, setIsRegister] = useState(false);
 
-  const API_URL = "https://dvd-quiz-participation-appreciate.trycloudflare.com";
+  const API_URL = "https://tons-occurring-influence-dam.trycloudflare.com";
 
   const handleRegister = async () => {
     if (!name || !email || !pass) return alert("Please fill all fields!");
