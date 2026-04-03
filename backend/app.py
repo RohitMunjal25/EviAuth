@@ -87,16 +87,33 @@ def register():
 
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.json
-    user = users_collection.find_one({"email": data['email']}) if users_collection else None
-    
-    if user and bcrypt.check_password_hash(user['password'], data['pass']):
+    if users_collection is None:
+        return jsonify({"error": "Database not connected"}), 500
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    email = data.get("email")
+    password = data.get("pass") or data.get("password")
+
+    if not email or not password:
+        return jsonify({"error": "Email or password missing"}), 400
+
+    user = users_collection.find_one({"email": email})
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if bcrypt.check_password_hash(user['password'], password):
         return jsonify({
             "name": user['name'],
             "email": user['email'],
             "status": "success"
         }), 200
-    return jsonify({"error": "Invalid email or password"}), 401
+
+    return jsonify({"error": "Invalid password"}), 401
 
 @app.route("/upload", methods=["POST"])
 def upload():
