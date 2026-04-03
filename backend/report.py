@@ -1,9 +1,15 @@
 def generate_report(metadata, video_forensics=None, image_forensics=None, audio_forensics=None, filename=""):
     model = str(metadata.get('Model', metadata.get('DeviceModelName', ''))).strip()
     make = str(metadata.get('Make', metadata.get('Manufacturer', ''))).strip()
+    software = str(metadata.get('Software', '')).lower()
+    
     has_hard_metadata = any([model, make]) and model.lower() != "unknown" and make.lower() != "unknown"
     device_name = f"{make} {model}".strip() if has_hard_metadata else "Unknown"
     
+    # NEW: Catch obvious AI signatures lurking in the file's Software metadata
+    ai_signatures = ['gemini', 'midjourney', 'dall-e', 'stable diffusion', 'firefly', 'openai', 'bing']
+    has_ai_metadata = any(ai_tool in software for ai_tool in ai_signatures)
+
     status = "Unknown"
     summary = "Pending analysis."
     fake_prob = 0
@@ -45,11 +51,12 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
             summary = f"Verified Original: Securely captured via {device_name}."
 
     elif image_forensics:
-        tampering_score = image_forensics.get("cnn_score", 0) 
+        tampering_score = image_forensics.get("casia_score", image_forensics.get("cnn_score", 0)) 
         genai_score = image_forensics.get("genai_score", 0)   
         is_pdf = image_forensics.get("is_pdf", False)
-        
-        # Max threat nikal lo
+        if has_ai_metadata:
+            genai_score = max(genai_score, 99.0)
+            
         overall_fake_score = max(tampering_score, genai_score)
         
         if is_pdf:
@@ -67,7 +74,7 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
             if has_hard_metadata:
                 if genai_score > 55:
                     status = "AI Generated (Spoofed Metadata)"
-                    summary = f"Warning: Device says {device_name}, but AI patterns found ({round(genai_score, 2)}%)."
+                    summary = f"Warning: Device claims {device_name}, but AI patterns found ({round(genai_score, 2)}%)."
                     fake_prob = overall_fake_score
                 elif tampering_score > 50:
                     status = "Manipulated"
@@ -86,10 +93,14 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
                     status = "Manipulated"
                     summary = f"Forgery Detected: Digital editing found ({round(tampering_score, 2)}%)."
                     fake_prob = overall_fake_score
-                else:
-                    status = "Authentic"
-                    summary = "Real Image: Pixels are natural despite missing metadata."
+                elif has_ai_metadata:
+                    status = "AI Generated"
+                    summary = f"Synthetic Image: AI generator signatures found in file metadata."
                     fake_prob = overall_fake_score
+                else:
+                    status = "Inconclusive / Suspicious"
+                    summary = "No hardware metadata found. Models detect natural pixels, but origin cannot be verified."
+                    fake_prob = max(overall_fake_score, 35.0) 
 
     return {
         "authenticity_status": status,
