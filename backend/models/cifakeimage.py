@@ -9,7 +9,7 @@ try:
     genai_model = tf.keras.models.load_model(MODEL_PATH)
     print("GenAI Detector Loaded Successfully!")
 except Exception as e:
-    print(f" Error: 'cifake.keras' load nahi hua! Kripya check karein ki wo models folder mein hai ya nahi.")
+    print(f" Error: 'cifake.keras' load error.")
     print(f"Details: {e}")
     genai_model = None
 

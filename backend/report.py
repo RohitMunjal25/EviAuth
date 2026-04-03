@@ -49,6 +49,9 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
         genai_score = image_forensics.get("genai_score", 0)   
         is_pdf = image_forensics.get("is_pdf", False)
         
+        # Max threat nikal lo
+        overall_fake_score = max(tampering_score, genai_score)
+        
         if is_pdf:
             fake_prob = tampering_score
             if fake_prob > 75:
@@ -62,35 +65,31 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
                 summary = "Document Verified: No severe digital tampering detected."
         else:
             if has_hard_metadata:
-                if genai_score > 80:
+                if genai_score > 55:
                     status = "AI Generated (Spoofed Metadata)"
-                    summary = f"Warning: Device says {device_name}, but high AI patterns found."
-                    fake_prob = genai_score
+                    summary = f"Warning: Device says {device_name}, but AI patterns found ({round(genai_score, 2)}%)."
+                    fake_prob = overall_fake_score
+                elif tampering_score > 50:
+                    status = "Manipulated"
+                    summary = f"Hardware found ({device_name}), but editing detected ({round(tampering_score, 2)}%)."
+                    fake_prob = overall_fake_score
                 else:
-                    fake_prob = tampering_score
-                    if tampering_score < 50:
-                        status = "Authentic"
-                        summary = f"Verified Original: Clean capture via {device_name}."
-                    else:
-                        status = "Manipulated"
-                        summary = f"Hardware found ({device_name}), but editing detected ({round(tampering_score, 2)}%)."
+                    status = "Authentic"
+                    summary = f"Verified Original: Clean capture via {device_name}."
+                    fake_prob = overall_fake_score
             else:
-                if genai_score > 80 and tampering_score < 40:
-                    status = "Suspicious"
-                    summary = f"Image degraded. High synthetic patterns ({round(genai_score, 2)}%)."
-                    fake_prob = max(tampering_score, 50.0) 
-                elif genai_score > 60 and tampering_score >= 40:
+                if genai_score > 55:
                     status = "AI Generated"
                     summary = f"Synthetic Image: Matches Generative AI patterns ({round(genai_score, 2)}%)."
-                    fake_prob = genai_score
+                    fake_prob = overall_fake_score
                 elif tampering_score > 50:
                     status = "Manipulated"
                     summary = f"Forgery Detected: Digital editing found ({round(tampering_score, 2)}%)."
-                    fake_prob = tampering_score
+                    fake_prob = overall_fake_score
                 else:
                     status = "Authentic"
                     summary = "Real Image: Pixels are natural despite missing metadata."
-                    fake_prob = max(tampering_score, genai_score)
+                    fake_prob = overall_fake_score
 
     return {
         "authenticity_status": status,
