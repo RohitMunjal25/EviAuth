@@ -91,7 +91,7 @@ def upload():
 
         from report import generate_report
 
-        
+        # IMAGE
         if ext in ["jpg", "jpeg", "png"]:
             from models.casiaimage import detect_casia_fake
             from models.cifakeimage import detect_ai_generated
@@ -99,11 +99,25 @@ def upload():
             casia_res = detect_casia_fake(path)
             genai_res = detect_ai_generated(path)
 
+            casia_score = (
+                casia_res.get("fake_probability")
+                or casia_res.get("score")
+                or casia_res.get("confidence")
+                or 0
+            )
+
+            genai_score = (
+                genai_res.get("genai_score")
+                or genai_res.get("score")
+                or genai_res.get("confidence")
+                or 0
+            )
+
             report = generate_report(
                 metadata=metadata,
                 image_forensics={
-                    "cnn_score": float(list(casia_res.values())[0]) if casia_res else 0,
-                    "genai_score": float(list(genai_res.values())[0]) if genai_res else 0
+                    "cnn_score": float(casia_score),
+                    "genai_score": float(genai_score)
                 },
                 filename=file.filename
             )
@@ -112,7 +126,6 @@ def upload():
             del detect_ai_generated
             gc.collect()
 
-        
         elif ext in ["mp3", "wav"]:
             from models.audiospoof import detect_audio_spoof
 
@@ -127,7 +140,6 @@ def upload():
             del detect_audio_spoof
             gc.collect()
 
-        
         elif ext in ["mp4", "mov"]:
             from ffmpeg import run_video_forensics
 
