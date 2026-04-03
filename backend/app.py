@@ -99,6 +99,12 @@ def upload():
             casia_res = detect_casia_fake(path)
             genai_res = detect_ai_generated(path)
 
+            print("CASIA RAW:", casia_res)
+            print("GENAI RAW:", genai_res)
+
+        
+            casia_score = float(list(casia_res.values())[0]) if casia_res else 0
+            genai_score = float(list(genai_res.values())[0]) if genai_res else 0
             casia_score = (
                 casia_res.get("fake_probability")
                 or casia_res.get("score")
