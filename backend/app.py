@@ -8,7 +8,10 @@ from pymongo import MongoClient
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from backendstore import UPLOAD_FOLDER
-
+import model_downloader
+print("Starting Pre-flight checks...")
+model_downloader.ensure_models_exist()
+print("Pre-flight checks complete. Starting server...")
 app = Flask(__name__)
 CORS(app)
 bcrypt = Bcrypt(app)
@@ -102,7 +105,6 @@ def upload():
             print("CASIA RAW:", casia_res)
             print("GENAI RAW:", genai_res)
 
-            # FIX: Properly extracting the scores using the correct keys
             casia_score = casia_res.get("casia_score", 0) if isinstance(casia_res, dict) else 0
             genai_score = genai_res.get("genai_score", 0) if isinstance(genai_res, dict) else 0
 
@@ -118,9 +120,11 @@ def upload():
 
             del detect_casia_fake
             del detect_ai_generated
+            
+            import tensorflow as tf
+            tf.keras.backend.clear_session()
             gc.collect()
 
-        # DOCUMENT (PDF) ANALYSIS
         elif ext == "pdf":
             from models.midv500 import detect_document_fake
             
@@ -138,7 +142,11 @@ def upload():
                 filename=file.filename
             )
 
+            # RAM CLEANUP
             del detect_document_fake
+            
+            import tensorflow as tf
+            tf.keras.backend.clear_session()
             gc.collect()
 
         # AUDIO ANALYSIS
@@ -154,6 +162,9 @@ def upload():
             )
 
             del detect_audio_spoof
+            
+            import tensorflow as tf
+            tf.keras.backend.clear_session()
             gc.collect()
 
         # VIDEO ANALYSIS
@@ -168,6 +179,8 @@ def upload():
                 filename=file.filename
             )
 
+            import tensorflow as tf
+            tf.keras.backend.clear_session()
             gc.collect()
 
         else:
