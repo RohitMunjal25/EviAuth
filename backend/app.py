@@ -78,6 +78,7 @@ def upload():
     if not file:
         return jsonify({"error": "No file uploaded"}), 400
 
+    import uuid
     filename = str(uuid.uuid4()) + "_" + file.filename
     path = os.path.join(UPLOAD_FOLDER, filename)
 
@@ -88,10 +89,9 @@ def upload():
         from exiftool import extract_metadata
         metadata = extract_metadata(path)
 
-        result = {
-            "metadata": metadata
-        }
+        from report import generate_report
 
+        
         if ext in ["jpg", "jpeg", "png"]:
             from models.casiaimage import detect_casia_fake
             from models.cifakeimage import detect_ai_generated
@@ -99,54 +99,70 @@ def upload():
             casia_res = detect_casia_fake(path)
             genai_res = detect_ai_generated(path)
 
-            result["models"] = {
-                "casia": casia_res,
-                "genai": genai_res
-            }
+            report = generate_report(
+                metadata=metadata,
+                image_forensics={
+                    "cnn_score": float(list(casia_res.values())[0]) if casia_res else 0,
+                    "genai_score": float(list(genai_res.values())[0]) if genai_res else 0
+                },
+                filename=file.filename
+            )
 
             del detect_casia_fake
             del detect_ai_generated
             gc.collect()
 
+        
         elif ext in ["mp3", "wav"]:
             from models.audiospoof import detect_audio_spoof
 
             audio_res = detect_audio_spoof(path)
 
-            result["models"] = {
-                "audio": audio_res
-            }
+            report = generate_report(
+                metadata=metadata,
+                audio_forensics=audio_res,
+                filename=file.filename
+            )
 
             del detect_audio_spoof
             gc.collect()
 
+        
         elif ext in ["mp4", "mov"]:
             from ffmpeg import run_video_forensics
 
             video_res = run_video_forensics(path)
 
-            result["models"] = video_res
+            report = generate_report(
+                metadata=video_res.get("metadata", {}),
+                video_forensics=video_res,
+                filename=file.filename
+            )
+
             gc.collect()
 
         else:
             return jsonify({"error": "Unsupported file type"}), 400
 
-        history_collection.insert_one({
-            "email": email,
-            "file_name": file.filename,
-            "result": result,
-            "created_at": datetime.now()
-        })
+        result = {"report": report}
+
+        if history_collection is not None:
+            history_collection.insert_one({
+                "email": email,
+                "file_name": file.filename,
+                "result": result,
+                "created_at": datetime.now()
+            })
 
         return jsonify(result)
 
     except Exception as e:
+        print("ERROR:", e)
         return jsonify({"error": str(e)}), 500
 
     finally:
         if os.path.exists(path):
             os.remove(path)
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
