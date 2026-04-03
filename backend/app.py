@@ -1,12 +1,13 @@
 import os
+import gc
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime
-from bson import ObjectId
 from flask_bcrypt import Bcrypt
 from backendstore import UPLOAD_FOLDER
+
 app = Flask(__name__)
 CORS(app)
 bcrypt = Bcrypt(app)
@@ -17,7 +18,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 MONGO_URI = os.getenv("MONGO_URL")
 
 if not MONGO_URI:
-    raise Exception(" MONGO_URL not set")
+    raise Exception("MONGO_URL not set")
 
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
@@ -33,29 +34,9 @@ except Exception as e:
     users_collection = None
     history_collection = None
 
-casia_model = None
-genai_model = None
-audio_model = None
-
-def load_models_if_needed():
-    global casia_model, genai_model, audio_model
-    from model_downloader import ensure_models_exist
-    ensure_models_exist()
-
-    if casia_model is None:
-        from models.casiaimage import detect_casia_fake
-        casia_model = detect_casia_fake
-
-    if genai_model is None:
-        from models.cifakeimage import detect_ai_generated
-        genai_model = detect_ai_generated
-
-    if audio_model is None:
-        from models.audiospoof import detect_audio_spoof
-        audio_model = detect_audio_spoof
 @app.route("/health")
 def health():
-    return {"status": "alive", "message": "Backend is running"}, 200
+    return {"status": "alive"}, 200
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -64,13 +45,7 @@ def register():
 
     data = request.get_json()
 
-    if not data:
-        return jsonify({"error": "Invalid JSON"}), 400
-
     password = data.get("pass") or data.get("password")
-
-    if not password:
-        return jsonify({"error": "Password missing"}), 400
 
     if users_collection.find_one({"email": data['email']}):
         return jsonify({"error": "User already exists"}), 400
@@ -80,10 +55,11 @@ def register():
     users_collection.insert_one({
         "name": data['name'],
         "email": data['email'],
-        "password": hashed_pass
+        "password": hashed_pass,
+        "created_at": datetime.now()
     })
 
-    return jsonify({"message": "Account created successfully"}), 201
+    return jsonify({"message": "Account created"}), 201
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -92,14 +68,8 @@ def login():
 
     data = request.get_json()
 
-    if not data:
-        return jsonify({"error": "Invalid JSON"}), 400
-
     email = data.get("email")
     password = data.get("pass") or data.get("password")
-
-    if not email or not password:
-        return jsonify({"error": "Email or password missing"}), 400
 
     user = users_collection.find_one({"email": email})
 
@@ -109,8 +79,7 @@ def login():
     if bcrypt.check_password_hash(user['password'], password):
         return jsonify({
             "name": user['name'],
-            "email": user['email'],
-            "status": "success"
+            "email": user['email']
         }), 200
 
     return jsonify({"error": "Invalid password"}), 401
@@ -118,7 +87,6 @@ def login():
 @app.route("/upload", methods=["POST"])
 def upload():
     file = request.files.get("file")
-    user_email = request.form.get("email")
 
     if not file:
         return jsonify({"error": "No file uploaded"}), 400
@@ -129,27 +97,50 @@ def upload():
         file.save(path)
         ext = file.filename.split(".")[-1].lower()
 
-        load_models_if_needed()
-
         result = {}
 
         if ext in ["jpg", "jpeg", "png"]:
-            casia_res = casia_model(path)
-            genai_res = genai_model(path)
+            from models.casiaimage import detect_casia_fake
+            from models.cifakeimage import detect_ai_generated
+
+            casia_res = detect_casia_fake(path)
+            genai_res = detect_ai_generated(path)
+
+            score = max(
+                casia_res.get("fake_probability", 0),
+                genai_res.get("genai_score", 0)
+            )
 
             result = {
-                "cnn_score": casia_res.get("fake_probability", 0),
-                "genai_score": genai_res.get("genai_score", 0)
+                "report": {
+                    "authenticity_status": "Fake" if score > 0.5 else "Real",
+                    "manipulation_probability": score
+                }
             }
 
+            del detect_casia_fake
+            del detect_ai_generated
+            gc.collect()
+
         elif ext in ["mp3", "wav"]:
-            audio_res = audio_model(path)
-            result = audio_res
+            from models.audiospoof import detect_audio_spoof
+
+            audio_res = detect_audio_spoof(path)
+
+            result = {
+                "report": {
+                    "authenticity_status": audio_res.get("label", "Unknown"),
+                    "manipulation_probability": audio_res.get("score", 0)
+                }
+            }
+
+            del detect_audio_spoof
+            gc.collect()
 
         else:
             return jsonify({"error": "Unsupported file type"}), 400
 
-        return jsonify({"result": result})
+        return jsonify(result)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
