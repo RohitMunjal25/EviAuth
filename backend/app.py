@@ -91,7 +91,7 @@ def upload():
 
         from report import generate_report
 
-        # IMAGE
+        # IMAGE ANALYSIS
         if ext in ["jpg", "jpeg", "png"]:
             from models.casiaimage import detect_casia_fake
             from models.cifakeimage import detect_ai_generated
@@ -102,28 +102,16 @@ def upload():
             print("CASIA RAW:", casia_res)
             print("GENAI RAW:", genai_res)
 
-        
-            casia_score = float(list(casia_res.values())[0]) if casia_res else 0
-            genai_score = float(list(genai_res.values())[0]) if genai_res else 0
-            casia_score = (
-                casia_res.get("fake_probability")
-                or casia_res.get("score")
-                or casia_res.get("confidence")
-                or 0
-            )
-
-            genai_score = (
-                genai_res.get("genai_score")
-                or genai_res.get("score")
-                or genai_res.get("confidence")
-                or 0
-            )
+            # FIX: Properly extracting the scores using the correct keys
+            casia_score = casia_res.get("casia_score", 0) if isinstance(casia_res, dict) else 0
+            genai_score = genai_res.get("genai_score", 0) if isinstance(genai_res, dict) else 0
 
             report = generate_report(
                 metadata=metadata,
                 image_forensics={
                     "cnn_score": float(casia_score),
-                    "genai_score": float(genai_score)
+                    "genai_score": float(genai_score),
+                    "is_pdf": False
                 },
                 filename=file.filename
             )
@@ -132,6 +120,28 @@ def upload():
             del detect_ai_generated
             gc.collect()
 
+        # DOCUMENT (PDF) ANALYSIS
+        elif ext == "pdf":
+            from models.midv500 import detect_document_fake
+            
+            doc_res = detect_document_fake(path)
+            print("DOC RAW:", doc_res)
+            
+            doc_score = doc_res.get("doc_score", 0) if isinstance(doc_res, dict) else 0
+
+            report = generate_report(
+                metadata=metadata,
+                image_forensics={
+                    "cnn_score": float(doc_score),
+                    "is_pdf": True
+                },
+                filename=file.filename
+            )
+
+            del detect_document_fake
+            gc.collect()
+
+        # AUDIO ANALYSIS
         elif ext in ["mp3", "wav"]:
             from models.audiospoof import detect_audio_spoof
 
@@ -146,6 +156,7 @@ def upload():
             del detect_audio_spoof
             gc.collect()
 
+        # VIDEO ANALYSIS
         elif ext in ["mp4", "mov"]:
             from ffmpeg import run_video_forensics
 
