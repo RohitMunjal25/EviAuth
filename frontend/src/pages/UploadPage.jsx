@@ -27,7 +27,7 @@ export default function UploadPage({ goScan }) {
     formData.append("file", file);
 
     try {
-      const response = await fetch("https://sheffield-entrance-fashion-tim.trycloudflare.com/upload", {
+      const response = await fetch("https://dvd-quiz-participation-appreciate.trycloudflare.com/upload", {
         method: "POST",
         body: formData,
       });
