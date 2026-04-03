@@ -95,8 +95,8 @@ export default function ResultPage({ setPage, file, resultData }) {
           <div className="verdict-desc">{report.forensic_summary || "Automated analysis complete."}</div>
 
           <div className="risk-list">
-            <RiskItem label="Metadata Integrity" value={report.metadata_integrity === "Preserved" ? 100 : 40} color="#38bdf8" />
-            <RiskItem label="AI Generation" value={score} color="#f87171" />
+            <RiskItem label="Manipulation Risk (AI / Edited)" value={score} color="#f87171" />
+            <RiskItem label="Authenticity (Original / Real)" value={100 - score} color="#4ade80" />
           </div>
         </div>
 

@@ -37,17 +37,21 @@ export default function UploadPage({ goScan }) {
 
       const currentUser = localStorage.getItem("currentUser");
       if (currentUser) {
-        const users = JSON.parse(localStorage.getItem("users") || "[]");
-        const index = users.findIndex(u => u.email === currentUser);
-        if (index !== -1) {
-          users[index].history.push({
-            name: file.name,
-            date: new Date().toLocaleDateString("en-IN"),
-            verdict: data?.report?.authenticity_status || "Unknown",
-            score: data?.report?.manipulation_probability ?? 0
-          });
-          localStorage.setItem("users", JSON.stringify(users));
+        let users = JSON.parse(localStorage.getItem("users") || "[]");
+        let index = users.findIndex(u => u.email === currentUser);
+        
+        if (index === -1) {
+          users.push({ email: currentUser, history: [] });
+          index = users.length - 1;
         }
+
+        users[index].history.push({
+          name: file.name,
+          date: new Date().toLocaleDateString("en-IN"),
+          verdict: data?.report?.authenticity_status || "Unknown",
+          score: data?.report?.manipulation_probability ?? 0
+        });
+        localStorage.setItem("users", JSON.stringify(users));
       }
 
       goScan(file, data);
