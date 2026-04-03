@@ -14,15 +14,22 @@ bcrypt = Bcrypt(app)
 load_dotenv()
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-MONGO_URI = os.getenv("MONGO_URL", "mongodb://localhost:27017/forensics_db")
+MONGO_URI = os.getenv("MONGO_URL")
+
+if not MONGO_URI:
+    raise Exception(" MONGO_URL not set")
 
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=2000)
     client.server_info()
+    print("MongoDB Connected")
+
     db = client["digital_forensics"]
     users_collection = db["users"]
     history_collection = db["history"]
-except:
+
+except Exception as e:
+    print("MongoDB Connection Failed:", e)
     users_collection = None
     history_collection = None
 
