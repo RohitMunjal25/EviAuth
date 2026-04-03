@@ -23,8 +23,14 @@ export default function UploadPage({ goScan }) {
     if (!file) return;
     setLoading(true);
 
+    const currentUser = localStorage.getItem("currentUser");
+
     const formData = new FormData();
     formData.append("file", file);
+    // 🔥 Backend (MongoDB) ke liye email attach kar diya
+    if (currentUser) {
+      formData.append("email", currentUser); 
+    }
 
     try {
       const response = await fetch("https://tons-occurring-influence-dam.trycloudflare.com/upload", {
@@ -35,24 +41,37 @@ export default function UploadPage({ goScan }) {
       if (!response.ok) throw new Error("Server error");
       const data = await response.json();
 
-      const currentUser = localStorage.getItem("currentUser");
+      // ==========================================
+      // BULLETPROOF HISTORY LOGIC (Failsafe Added)
+      // ==========================================
       if (currentUser) {
-        let users = JSON.parse(localStorage.getItem("users") || "[]");
-        let index = users.findIndex(u => u.email === currentUser);
-        
-        if (index === -1) {
-          users.push({ email: currentUser, history: [] });
-          index = users.length - 1;
-        }
+        try {
+          let users = JSON.parse(localStorage.getItem("users") || "[]");
+          let userObj = users.find(u => u.email === currentUser);
+          
+          if (!userObj) {
+            userObj = { email: currentUser, history: [] };
+            users.push(userObj);
+          }
+          
+          // Failsafe: Agar corrupted data ki wajah se history array ud gaya tha
+          if (!userObj.history) {
+            userObj.history = [];
+          }
 
-        users[index].history.push({
-          name: file.name,
-          date: new Date().toLocaleDateString("en-IN"),
-          verdict: data?.report?.authenticity_status || "Unknown",
-          score: data?.report?.manipulation_probability ?? 0
-        });
-        localStorage.setItem("users", JSON.stringify(users));
+          userObj.history.push({
+            name: file.name,
+            date: new Date().toLocaleDateString("en-IN"),
+            verdict: data?.report?.authenticity_status || "Unknown",
+            score: data?.report?.manipulation_probability ?? 0
+          });
+          
+          localStorage.setItem("users", JSON.stringify(users));
+        } catch (storageErr) {
+          console.error("Local storage error:", storageErr);
+        }
       }
+      // ==========================================
 
       goScan(file, data);
     } catch (err) {
