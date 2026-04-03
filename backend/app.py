@@ -142,15 +142,14 @@ def upload():
                 filename=file.filename
             )
 
-            # RAM CLEANUP
+        
             del detect_document_fake
             
             import tensorflow as tf
             tf.keras.backend.clear_session()
             gc.collect()
 
-        # AUDIO ANALYSIS
-        elif ext in ["mp3", "wav"]:
+        elif ext in ["mp3", "wav", "m4a", "ogg", "flac", "aac"]:
             from models.audiospoof import detect_audio_spoof
 
             audio_res = detect_audio_spoof(path)
