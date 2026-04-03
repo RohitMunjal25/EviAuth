@@ -30,15 +30,19 @@ def detect_document_fake(file_path):
         img_data = pix.tobytes("png")
         original_img = Image.open(io.BytesIO(img_data)).convert('RGB')
 
+        # --- ORIGINAL IMAGE FIX ---
         img_resized = original_img.resize((224, 224))
         img_array = tf.keras.preprocessing.image.img_to_array(img_resized)
         img_array = np.expand_dims(img_array, axis=0)
+        img_array = img_array / 255.0  # <--- FIX: Pixels ko 0-1 me normalize kiya
         orig_score = float(model.predict(img_array, verbose=0)[0][0])
 
+        # --- ELA IMAGE FIX ---
         ela_img = apply_ela(original_img)
         ela_resized = ela_img.resize((224, 224))
         ela_array = tf.keras.preprocessing.image.img_to_array(ela_resized)
         ela_array = np.expand_dims(ela_array, axis=0)
+        ela_array = ela_array / 255.0  # <--- FIX: ELA pixels ko bhi 0-1 me normalize kiya
         ela_score = float(model.predict(ela_array, verbose=0)[0][0])
 
         final_page_score = (orig_score + ela_score) / 2
@@ -46,6 +50,10 @@ def detect_document_fake(file_path):
 
     doc.close()
     
+    # Safety check agar PDF me koi valid page na ho
+    if not page_results:
+        return {"doc_score": 0.0, "total_pages": 0, "raw_scores": []}
+        
     avg_doc_score = sum(page_results) / len(page_results)
     
     return {
