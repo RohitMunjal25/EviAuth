@@ -25,6 +25,11 @@ def detect_ai_generated(file_path):
         img_array = tf.keras.utils.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
         
+        # ==========================================
+        # FIX: Normalize the image pixels to 0-1 range
+        # ==========================================
+        img_array = img_array / 255.0
+        
         prediction = genai_model.predict(img_array, verbose=0)
         
         score = float(prediction[0][0]) * 100
