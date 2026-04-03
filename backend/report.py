@@ -62,13 +62,18 @@ def generate_report(metadata, video_forensics=None, image_forensics=None, audio_
                 summary = "Document Verified: No severe digital tampering detected."
         else:
             if has_hard_metadata:
-                fake_prob = tampering_score
-                if tampering_score < 50:
-                    status = "Authentic"
-                    summary = f"Verified Original: Clean capture via {device_name}."
+                if genai_score > 80:
+                    status = "AI Generated (Spoofed Metadata)"
+                    summary = f"Warning: Device says {device_name}, but high AI patterns found."
+                    fake_prob = genai_score
                 else:
-                    status = "Manipulated"
-                    summary = f"Hardware found ({device_name}), but editing detected ({round(tampering_score, 2)}%)."
+                    fake_prob = tampering_score
+                    if tampering_score < 50:
+                        status = "Authentic"
+                        summary = f"Verified Original: Clean capture via {device_name}."
+                    else:
+                        status = "Manipulated"
+                        summary = f"Hardware found ({device_name}), but editing detected ({round(tampering_score, 2)}%)."
             else:
                 if genai_score > 80 and tampering_score < 40:
                     status = "Suspicious"
